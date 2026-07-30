@@ -1,0 +1,34 @@
+services:
+  music-hub:
+    build: .
+    image: alpine-music-hub
+    container_name: music-hub
+    stdin_open: true # Equivalente a -i
+    tty: true        # Equivalente a -t
+    env_file:
+      - .env
+    ports:
+      - "8888:8888"
+      - "8989:8989"
+    # --- PERMISOS PARA HILOS DE AUDIO Y SYSCALLS EN RUST/ALPINE ---
+    cap_add:
+      - SYS_NICE
+      - SYS_RESOURCE
+    security_opt:
+      - seccomp:unconfined
+    # --------------------------------------------------------------
+    volumes:
+      # Conexión con el audio de Windows (WSLg)
+      - /mnt/wslg:/mnt/wslg
+      # Guardado persistente de configuración
+      - ~/.config/spotatui:/home/music/.config/spotatui
+      - ~/.config/ytfzf:/home/music/.config/ytfzf
+      # Evita conflictos de permisos en la caché temporal de Spotatui
+      - spotatui-cache:/home/music/.cache
+    environment:
+      - PULSE_SERVER=unix:/mnt/wslg/PulseServer
+      - SPOTATUI_LOG_DIR=/home/music/.local/state/spotatui_logs
+      - XDG_STATE_HOME=/home/music/.local/state
+
+volumes:
+  spotatui-cache:
